@@ -20,6 +20,13 @@ organization="ICANN"
 [author.address]
 email = "andy@hxr.us"
 
+[[author]]
+initials="T."
+surname="Harrison"
+fullname="Tom Harrison"
+organization="APNIC"
+[author.address]
+email = "tomh@apnic.net"
 
 %%%
 
@@ -36,243 +43,294 @@ or JSContact.
 
 # Background
 
-# Extension And Identifier
+[@!RFC9083] defines the contact data of an entity using jCard ([@?RFC7095]),
+which is a JSON format for vCard ([@?RFC6350]). Experience has shown that jCard
+is unsuitable for RDAP because it "jagged" array style is unlike any other
+JSON in RDAP, it is error prone and difficult to debug, and it can express
+far more information than is necessary for RDAP.
+
+This document defines the SimpleContact extension for RDAP. This extension
+intends to model JSON is the same style and manner as other RDAP structures
+and is purposefully limited to the data in-use by Internet Number Registries
+and Domain Name Registries.
+
+The purposeful limitation of the contact data model defined in this document
+is informed by the [ICANN gTLD RDAP Response Profile](https://www.icann.org/en/system/files/files/rdap-response-profile-15feb19-en.pdf),
+the [NRO RDAP Profile](https://bitbucket.org/nroecg/nro-rdap-profile/raw/v1/nro-rdap-profile.txt),
+and [@!RFC7495].
+
+# Simple Contact Extension And Identifier
 
 The RDAP extension identifier for this extension is "sc". This extension
-defines the following JSON values may be found in an RDAP response:
+defines one JSON member named "sc_data" to be found in RDAP responses. 
+"sc_data" is a JSON object, and it has child members described in the following
+sections. Each child member of "sc_data" is optional.
 
-* "sc_kind" 
-* "sc_i18n"
-* "sc_l10n"
-* "sc_masked"
-* "sc_geo"
+There are two common, optional JSON members of these child members: "lang" and "masked".
 
-Each is optionals, and each is described in a subseqent section.
+The JSON member "lang" is the same as that defined by RDAP in [@!RFC9083, Section 4.4].
 
-# Kind
+The JSON member "masked" is a boolean. When true, this indicates the data of
+JSON object provided is to facilitate contact with the entity in a manner that
+hides or obfuscates the identity of the entity. 
 
-The "sc_kind" JSON value is a string, that is either "individual" or
-"organization".
+## Kind
 
-# Isomorphic Data
+The "kind" JSON value is a string, that is either "individual", "role" or
+"organization". An example:
 
-Some contact data has the same structure but different forms for different
-purposes, depending on the context of data collection by the registry. This
-data is in the "sc_i18n", "sc_l10n", and "sc_masked" values, which all
-have the same internal structures.
+    "kind" : "role"
 
-"sc_l10n" is a localization of the data found in "sc_i18n". The method and type 
-of localization is not defined in this document. In some instances, localization
-is a process of transmutation of Unicode data to all ASCII data and in other
-cases localization is a process of transliteration of data from one natural
-language to another.
-
-"sc_masked" is a masked version of the data found in "sc_i18n". This data is
-used to describe methods of communication with the entity while partially or
-fully masking identifying details of the entity.
 
 ## Names
 
-Names of an entity may be given using either or all of the values named
-"fullName", "organizationName", and "personName". The forms of each are
-described below. 
+Names may be expressed as unstructured text and as structured data.
+When names are given as structured data, it is RECOMMENDED to also
+give unstructured names. This may require servers which store names
+in structured data to synthesize the unstructured names. Servers
+which store unstructured names are not required to synthesize structured
+names.
 
-Each is optional. When "fullName" is used without the others, it is
-assumed to refer to an organization name or a person name. When "fullName"
-is used with either of the others, it is assumed to refer to a person's
-name. When "organizationName" is used with either or both "fullName" or
-"personName", it is assumed the person is associated with the organization
-being named.
+Names can be expressed for each kind of the entity, as described in the
+"kind" string. When describing an "individual", the name of the individual's
+role and organization may also be expressed. When describing a "role", the
+name of role's organization may also be expressed. It is NOT RECOMMENDED
+to express the name of a role or individual when the kind is "organization".
 
-    "fullName" : "Mr. Dr. Bob Lee Aloysius Smurd, Ph.d",
-    "organizationName" : {
-      "name" : "ACME",
-      "subDivisions": [ "Floors and Windows", "Direct Sales" ],
-      "suffixes" : [ "Gmbh" ]
-    },
-    "personName" : { 
-      "prefixes": [ "Mr.", "Dr."],
-      "firstNames": [ "Bob" ],
-      "middleNames" : [ "Lee", "Aloysius" ],
-      "lastNames" : [ "Smurd" ],
-      "suffixes" : [ "Ph.d." ]
-    } 
+Each type of name is expressed as a JSON array in which each item is an
+object with the following optional members:
 
+* "name" - the unstructured name as a string
+* "lang" - see above
+* "masked" - see above
+* "parts" - a JSON object that varies for each type of name.
 
-### Full Name
+### Individual Names
 
-The full name of an entity expresses an unstructured name, and is a simple
-JSON string with the name of "fullName":
+The name of an individual may be expressed with the JSON member named
+"individualNames". The "parts" object for "individualNames" has the
+following optional members:
 
-    "fullName" : "Mr. Dr. Bob Lee Aloysius Smurd, Ph.d"
-
-### Organization Name Components
-
-An organization name can be expressed as a structured name with multiple components.
-It is a JSON object with the name "organizationName" and has the following form:
-
-    "organizationName" : {
-      "name" : "ACME",
-      "subDivisions": [ "Floors and Windows", "Direct Sales" ],
-      "suffixes" : [ "Gmbh" ]
-    }
-
-The "name" string is required. Both "subDivisions" and "suffixes" are arrays
-of strings, and both are optional. The "suffixes" array holds signifiers used
-to convey legal or organization status.
-
-If both "subDivisions" and "suffixes" are not used, the organization name
-may be considered to be unstructured and the "name" string may hold components
-of the organization name that would otherwise be expressed in the "subDivisions"
-or "suffixes" arrays.
-
-    "organizationName" : {
-      "name" : "ACME Gmbh, Floors and Windows, Direct Sales"
-    }
-
-### Person Name Components
-
-The expression of the components of person names uses a JSON object with the
-name "personName" and has the following form:
-
-    "personName" : { 
-      "prefixes": [ "Mr.", "Dr."],
-      "firstNames": [ "Bob" ],
-      "middleNames" : [ "Lee", "Aloysius" ],
-      "lastNames" : [ "Smurd" ],
-      "suffixes" : [ "Ph.d." ]
-    } 
-
-Each component is an array of strings, and each is optional:
-
-* "prefixes" holds honorifics, titles, and other signifiers that are
+* "prefixes" - an array of strings holding honorifics, titles, and other signifiers that are
 typically prefixed to a name.
-* "firstNames" holds the set of names that preceed other names. These are often called "given" names.
-* "middleNames" holds the set of names that succeed first names and preceed last names. These
+* "firstNames" - an array of strings holding the set of names that preceed other names. These are often called "given" names.
+* "middleNames" - an array of strings holding the set of names that succeed first names and preceed last names. These
 are often referred to as "additional" names.
-* "lastNames" holds the set of names that succeed other names. These are often called "sur" names.
-* "suffixes" holds honorifics, titles, and other signifiers that are typically suffixed to a name.
+* "lastNames" - an array of strings holding the set of names that succeed other names. These are often called "sur" names.
+* "suffixes" - an array of strings holding honorifics, titles, and other signifiers that are typically suffixed to a name.
 
-## Postal Address
+The following is an example:
 
-Postal addresses can be unstructured, structured, or semi-structured. A postal address
-is expressed as a JSON object using the name "postalAddress". Components of the postal
-address object are described below.
+    "individualNames" : [
+      {
+        "name" : "Dr. Bob Lee Aloysius Smurd, Ph.d.",
+        "lang" : "en-AU",
+        "parts" : {
+          "prefixes": [ "Dr."],
+          "firstNames": [ "Bob" ],
+          "middleNames" : [ "Lee", "Aloysius" ],
+          "lastNames" : [ "Smurd" ],
+          "suffixes" : [ "Ph.d." ]
+        }
+      }
+    ]
 
-* address lines contain the street components and any other parts of a postal address
-that cannot be more specifically expressed by other components. Address lines is
-an array of strings, each string representing a line of the address, and is named
-"lines".
-* the "locality" value is a string representing the village, city, municipality, or similar
-part of a postal address. This value is optional.
-* the region name of a country, such as a state, province, or department, can be expressed as
-a string named "regionName" and is optional.
-* the region code, representing the ISO-3166-3 two letter code, can be expressed as
-the JSON string named "regionCode" and is optional.
-* the country name can be expressed as the JSON string named "countryName" and is optional.
-* the ISO-3166-2 two letter code for a country can be expressed as the JSON string named
-"countryCode".
-* the postal code, sometimes referred to as a zip code or post code, may be expressed
-by the optional JSON string named "postalCode".
+### Role Names
 
-The following is an example of a structured postal address:
+The name of a role may be expressed with the JSON member named
+"roleNames". The "parts" object for "roleNames" has one 
+member named "roles" which is an array of strings.
 
-    "postalAddress" : {
-      "lines" : [ 
-        "Suite 300",
-        "123 Random Tree Name Street",
-      ],
-      "locality" : "Kalamazoo",
-      "regionName" : "Michigan",
-      "regionCode" : "MI",
-      "countryName" : "United States of America",
-      "countryCode" : "US",
-      "postalCode" : "90215"
-    }
+The following is an example:
 
-The following is an example of an unstructured postal address:
+    "roleNames" : [
+      {
+        "name" : "Abuse Prevention, Trust and Safety",
+        "lang" : "en-AU",
+        "parts" : {
+          "roles" : [ "Abuse Prevention", "Trust and Safety"],
+        }
+      }
+    ]
 
-    "postalAddress" : {
-      "lines" : [ 
-        "Suite 300",
-        "123 Random Tree Name Street",
-        "Kalamazoo, MI 90215"
-      ],
-    }
+### Organization Names
+
+The name of an organization may be expressed with the JSON member named
+"organizationNames". The "parts" object for "organizationNames" has the
+following optional members:
+
+* "name" - a string holding the name of the organization without other qualifiers.
+* "subDivisions" - an array of strings, each the name of a subdivision of the organization.
+* "suffixes" - an array of strings, each signifying a legal status of the organization.
+* "legalId" - an array of strings, each containing a legal identifier of the organization.
+
+The following is an example:
+
+    "organizationNames" : [
+      {
+        "name" : "ACME Pty, Floors and Windows, Direct Sales",
+        "lang" : "en-AU",
+        "parts" : {
+          "name" : "ACME",
+          "subDivisions": [ "Floors and Windows", "Direct Sales" ],
+          "suffixes" : [ "Pty" ],
+        }
+      }
+    ]
+
+## Postal Addresses
+
+Like names, postal addresses can be expressed as either structured or unstructured.
+When postal addresses are given as structured data, it is RECOMMENDED to also
+give unstructured addresses. This may require servers which store addresses
+in structured data to synthesize the unstructured addresses. Servers
+which store unstructured addresses are not required to synthesize structured
+addresses.
+
+Postal addresses are expressed with the "postalAddresses" JSON member, which is an
+array of objects each with the following optional members:
+
+* "completeAddress" - holds the unstructured postal address as an array of strings
+in which each string represents a line of a postal address.
+* "deliveryLines" - an array of strings in which each string represents a line of a
+postal address specific to delivery within the locality of the address. This information
+typically contains street names and numbers, apartment or suite names, and other information
+necessary for the delivery of postal mail within a locality.
+* "locality" - a string representing the village, city, municipality, or similar
+part of a postal address.
+* "regionName" - a string of the region name of a country, such as a state, province, or department.
+* "regionCode" - a string representing the ISO-3166-3 two letter code.
+* "countryName" - a string containing the country name.
+* "countryCode" - a string containing the ISO-3166-2 two letter code for the country.
+* "postalCode" - a string containgin the postal code, sometimes referred to as a zip code or post code.
+* "lang" - see above
+* "masked" - see above
+
+The following is an example of a postal address:
+
+    "postalAddresses" : [
+      {
+        "completeAddress" : [
+          "Suite 300",
+          "123 Random Tree Name Street",
+          "Kalamazoo, MI 90125 US"
+        ]
+        "deliveryLines" : [ 
+          "Suite 300",
+          "123 Random Tree Name Street",
+        ],
+        "locality" : "Kalamazoo",
+        "regionName" : "Michigan",
+        "regionCode" : "MI",
+        "countryName" : "United States of America",
+        "countryCode" : "US",
+        "postalCode" : "90215",
+        "lang" : "en-US"
+      }
+    ]
+
 
 ## Email Addresses
 
-Email addresses can be expressed in a JSON array of strings named "emails". Each
-string is a separate email address. If a string begins with "mailto:", the string
+Email addresses can be expressed in a JSON array of objects named "emails". Each
+object contains the following members:
+
+* "email" - a string containing the email address.
+* "lang" - optional, see above
+* "masked" - optional, see above
+
+If the string in "email" begins with "mailto:", the string
 MUST be conformant to the mailto URI specified in [@!RFC6068]. Otherwise, the string
 MUST be conformant to the address specification of [@!RFC5322, Section 3.4].
 This JSON value is optional.
 
     "emails" : [
-      "mailto:bob.smurd@example.com",
-      "Bob Smurd <bobby@smurd.example.net>"
+      {
+        "email": "山田太郎 <yamada.taro@example.net>",
+        "lang" : ja
+      },
+      {
+        "email" : "Yamada Taro <yamada.taro@example.net>"
+        "lang" : "ja-Latn"
+      }
     ]
 
 ## Telephones
 
-Telephones to be used for voice communication can be expressed in a JSON array of strings
+Telephones to be used for voice communication can be expressed in a JSON array of objects
 named "voicePhones". Telephones to be used for facsimile machine communications can be
-expressed in a JSON array of strings named "faxPhones". The string of each array signifies
-a separate telephone number. Both JSON values are optional.
+expressed in a JSON array of objects named "faxPhones". Each object has the following 
+members:
 
-If a string begins with "tel:", the string MUST be conformant to the tel URI specified in
+* "phone" - a string holding the phone number
+* "masked" - optional, see above
+
+If the string in "phone" begins with "tel:", the string MUST be conformant to the tel URI specified in
 [@!RFC3966]. Otherwise the string is considered unstructured text. If possible, the
 unstructurued text SHOULD be conformant to the [@!E.161] format and the [@!E.164] numbering
 plan.
 
+The following are examples:
+
     "voicePhones" : [
-      "tel:tel:+1-201-555-0123",
-      "+447040202"
+      {
+        "phone": "tel:+1-201-555-0123",
+        "masked" : false
+      },
+      {
+        "phone" : "+447040202",
+      }
     ],
     "faxPhones" : [
-      "tel:tel:+1-201-555-9999;ext=123"
+      {
+        "phone" : "tel:tel:+1-201-555-9999;ext=123",
+        "masked" : false
+      }
     ]
 
-## Web Contact
+## Web Contacts
 
 Communications with the entity using a web browser, often by submitting data via a web form,
-can be expressed using a JSON array of strings called "webContacts". Each string MUST be
-an https URI as specified by [@!RFC9110, Section 4.2.2]. This JSON value is optional.
+can be expressed using a JSON array of objects called "webContacts". Each object has the following
+members:
+
+* "uri" - a string with an HTTPS URI as specified by [@!RFC9110, Section 4.2.2].
+* "masked" - optional, see above.
+
+An example:
 
     "webContacts" : [
-      "https://example.com/contact-me"
+      {
+        "uri" : "https://example.com/contact-me"
+      }
     ]
 
-## Organization Roles and Titles
+## Geographic Locations
 
-To express the roles and titles of the entity within the organization, the "organizationalRoles"
-and "organizationalTitles" JSON values may be used respectively. Each is an array of strings
-containing unstructured text. Each is optional.
-
-The "organizationalRoles" is not the same as the RDAP "roles" array. The RDAP "roles" array
-describes a relationship between an entity it's containing object (e.g. domain, ip network).
-An organizational role describes the relationship of an entity with the organization.
-
-    "organizationalTtitles" : [
-      "Senior Vice President",
-      "Technical Fellow"
-    ],
-    "organizationalRoles" : [
-      "Interim Chief Fun Officer",
-      "Head of Squishy Toys"
-    ]
-
-## Language
-
-The JSON value "lang" is the same as that defined by RDAP in [@!RFC9083, Section 4.4].
-This JSON value is optional.
-
-# Geographic Locations
-
-Geographic locations can be expressed using the "sc_geo" JSON value, which is an array
+Geographic locations can be expressed using the "geo" JSON value, which is an array
 of strings. Each string MUST be conformant to the geo URI scheme as defined in [@!RFC5870].
 
-    "sc_geo" : [
+    "geo" : [
       "geo:37.786971,-122.399677"
     ]
 
+# EPP Int/Loc Data
+
+[@!RFC5733] defines mechanisms to indicate data is "localized" or "internationalized"
+using "int" and "loc" types. The "int" designates data as being 7-bit ASCII. To express
+contact data with the "int" designation in SimpleContact, it is RECOMMENDED that a language
+tag with the "Latn" script subtag (see [!@RFC5646]) be used.
+
+# No jCard Extension and Identifier
+
+This document also defines a second RDAP extension to signal the non-use of jCard in RDAP
+responses. The identifier for this extension is "noJCard". When used with the RDAP-X
+media type [@!I-D.draft-newton-regext-rdap-x-media-type] and the SimpleContact identifier, 
+a client can signal to a server that entities should substitute SimpleContact data for jCard data.
+When used with queries containing large amounts of entity data, such as RDAP searches, this
+can reduce the payload significantly (instead of sending both jCard and SimpleContact).
+
+Use of the "noJCard" extension is independent of the SimpleContact extension, and may be
+used for other purposes as is appropriate to server policy.
+
+{backmatter}
