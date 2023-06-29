@@ -9,8 +9,8 @@ ipr= "trust200902"
 name = "Internet-Draft"
 value = "draft-newton-regext-rdap-simple-contact-00"
 stream = "IETF"
-status = "info"
-date = 2023-06-21T00:00:00Z
+status = "standard"
+date = 2023-06-29T00:00:00Z
 
 [[author]]
 initials="A."
@@ -283,7 +283,7 @@ members:
 
 If the string in "phone" begins with "tel:", the string MUST be conformant to the tel URI specified in
 [@!RFC3966]. Otherwise the string is considered unstructured text. If possible, the
-unstructurued text SHOULD be conformant to the [@!E.161] format and the [@!E.164] numbering
+unstructurued text SHOULD be conformant to the [@!ITU.E161.2001] format and the [@!ITU.E164.1991] numbering
 plan.
 
 The following are examples:
@@ -343,7 +343,7 @@ tag with the "Latn" script subtag (see [!@RFC5646]) be used.
 
 This document also defines a second RDAP extension to signal the non-use of jCard in RDAP
 responses. The identifier for this extension is "noJCard". When used with the RDAP-X
-media type [@!I-D.draft-newton-regext-rdap-x-media-type] and the SimpleContact identifier, 
+media type [@!I-D.newton-regext-rdap-x-media-type] and the SimpleContact identifier, 
 a client can signal to a server that entities should substitute SimpleContact data for jCard data.
 When used with queries containing large amounts of entity data, such as RDAP searches, this
 can reduce the payload significantly (instead of sending both jCard and SimpleContact).
@@ -352,3 +352,29 @@ Use of the "noJCard" extension is independent of the SimpleContact extension, an
 used for other purposes as is appropriate to server policy.
 
 {backmatter}
+
+<reference anchor="ITU.E164.1991">
+<front>
+<title>
+The International Public Telecommunication Numbering Plan
+</title>
+<author>
+<organization>International Telecommunications Union</organization>
+</author>
+<date year="1991"/>
+</front>
+<seriesInfo name="ITU-T" value="Recommendation E.164"/>
+</reference>
+
+<reference anchor="ITU.E161.2001">
+<front>
+<title>
+Arrangement of digits, letters and symbols on telephones and other devices that can be used for gaining access to a telephone network
+</title>
+<author>
+<organization>International Telecommunications Union</organization>
+</author>
+<date year="2001"/>
+</front>
+<seriesInfo name="ITU-T" value="Recommendation E.161"/>
+</reference>
