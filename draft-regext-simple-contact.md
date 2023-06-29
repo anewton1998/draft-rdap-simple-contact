@@ -45,8 +45,9 @@ or JSContact.
 
 [@!RFC9083] defines the contact data of an entity using jCard ([@?RFC7095]),
 which is a JSON format for vCard ([@?RFC6350]). Experience has shown that jCard
-is unsuitable for RDAP because it "jagged" array style is unlike any other
-JSON in RDAP, it is error prone and difficult to debug, and it can express
+is unsuitable for RDAP because its "jagged" array style is unlike any other
+JSON in RDAP; it is more difficutl to deserialize into objects that are easy
+to work with, it is error prone and difficult to debug, and it can express
 far more information than is necessary for RDAP.
 
 This document defines the SimpleContact extension for RDAP. This extension
@@ -55,7 +56,8 @@ and is purposefully limited to the data in-use by Internet Number Registries
 and Domain Name Registries.
 
 The purposeful limitation of the contact data model defined in this document
-is informed by the [ICANN gTLD RDAP Response Profile](https://www.icann.org/en/system/files/files/rdap-response-profile-15feb19-en.pdf),
+is informed by [@!RFC5733], the
+[ICANN gTLD RDAP Response Profile](https://www.icann.org/en/system/files/files/rdap-response-profile-15feb19-en.pdf),
 the [NRO RDAP Profile](https://bitbucket.org/nroecg/nro-rdap-profile/raw/v1/nro-rdap-profile.txt),
 and [@!RFC7495].
 
@@ -70,9 +72,14 @@ There are two common, optional JSON members of these child members: "lang" and "
 
 The JSON member "lang" is the same as that defined by RDAP in [@!RFC9083, Section 4.4].
 
-The JSON member "masked" is a boolean. When true, this indicates the data of
-JSON object provided is to facilitate contact with the entity in a manner that
-hides or obfuscates the identity of the entity. 
+The JSON member "masked" is a boolean. When true, this indicates that the data of the
+JSON object provided is to facilitate communication with the entity in a manner that
+hides or obfuscates the identity of the entity. This serves the same purpose as
+the vCard properties defined in [@!RFC8605].
+
+Most of the child members are arrays allowing the expression of multiple
+variants of the same information. The order in which items appear in these
+arrays denotes preference order for the variants.
 
 ## Kind
 
@@ -87,14 +94,15 @@ The "kind" JSON value is a string, that is either "individual", "role" or
 Names may be expressed as unstructured text and as structured data.
 When names are given as structured data, it is RECOMMENDED to also
 give unstructured names. This may require servers which store names
-in structured data to synthesize the unstructured names. Servers
-which store unstructured names are not required to synthesize structured
-names.
+in structured data to synthesize the unstructured names. 
+Servers which store only unstructured names SHOULD NOT attempt to synthesize 
+and provide structured names from those values, because of the difficulty 
+of doing this correctly for all types of names."
 
 Names can be expressed for each kind of the entity, as described in the
 "kind" string. When describing an "individual", the name of the individual's
 role and organization may also be expressed. When describing a "role", the
-name of role's organization may also be expressed. It is NOT RECOMMENDED
+name of the role's organization may also be expressed. It is NOT RECOMMENDED
 to express the name of a role or individual when the kind is "organization".
 
 Each type of name is expressed as a JSON array in which each item is an
@@ -104,6 +112,13 @@ object with the following optional members:
 * "lang" - see above
 * "masked" - see above
 * "parts" - a JSON object that varies for each type of name.
+
+A> The co-authors of this specification are skeptical of the need for
+A> structured names in RDAP. None of the references in Section 1 indicate
+A> that names are collected or published structurally. Additionally,
+A> attempts to structure names for all contexts and languages is unlikely
+A> to yield a complete solution 
+A> (see https://mailarchive.ietf.org/arch/msg/calsify/3MR_gLO-1NuyQvE8DIl88KNglSs/).
 
 ### Individual Names
 
@@ -183,9 +198,10 @@ The following is an example:
 Like names, postal addresses can be expressed as either structured or unstructured.
 When postal addresses are given as structured data, it is RECOMMENDED to also
 give unstructured addresses. This may require servers which store addresses
-in structured data to synthesize the unstructured addresses. Servers
-which store unstructured addresses are not required to synthesize structured
-addresses.
+in structured data to synthesize the unstructured addresses. 
+Servers which store only unstructured addresses SHOULD NOT attempt to synthesize 
+and provide structured addresses from those values, because of the difficulty of 
+doing this correctly for all types of addresses.
 
 Postal addresses are expressed with the "postalAddresses" JSON member, which is an
 array of objects each with the following optional members:
@@ -202,7 +218,7 @@ part of a postal address.
 * "regionCode" - a string representing the ISO-3166-3 two letter code.
 * "countryName" - a string containing the country name.
 * "countryCode" - a string containing the ISO-3166-2 two letter code for the country.
-* "postalCode" - a string containgin the postal code, sometimes referred to as a zip code or post code.
+* "postalCode" - a string containing the postal code, sometimes referred to as a zip code or post code.
 * "lang" - see above
 * "masked" - see above
 
@@ -283,7 +299,7 @@ The following are examples:
     ],
     "faxPhones" : [
       {
-        "phone" : "tel:tel:+1-201-555-9999;ext=123",
+        "phone" : "tel:+1-201-555-9999;ext=123",
         "masked" : false
       }
     ]
@@ -313,6 +329,8 @@ of strings. Each string MUST be conformant to the geo URI scheme as defined in [
     "geo" : [
       "geo:37.786971,-122.399677"
     ]
+
+"geo" values SHOULD NOT be used with contact data when "kind" is "individual".
 
 # EPP Int/Loc Data
 
