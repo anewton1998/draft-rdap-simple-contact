@@ -10,7 +10,7 @@ name = "Internet-Draft"
 value = "draft-newton-regext-rdap-simple-contact-00"
 stream = "IETF"
 status = "standard"
-date = 2023-06-29T00:00:00Z
+date = 2023-07-05T00:00:00Z
 
 [[author]]
 initials="A."
@@ -51,7 +51,7 @@ to work with, it is error prone and difficult to debug, and it can express
 far more information than is necessary for RDAP.
 
 This document defines the SimpleContact extension for RDAP. This extension
-intends to model JSON is the same style and manner as other RDAP structures
+intends to model JSON in the same style and manner as other RDAP structures
 and is purposefully limited to the data in-use by Internet Number Registries
 and Domain Name Registries.
 
@@ -97,7 +97,7 @@ give unstructured names. This may require servers which store names
 in structured data to synthesize the unstructured names. 
 Servers which store only unstructured names SHOULD NOT attempt to synthesize 
 and provide structured names from those values, because of the difficulty 
-of doing this correctly for all types of names."
+of doing this correctly for all types of names.
 
 Names can be expressed for each kind of the entity, as described in the
 "kind" string. When describing an "individual", the name of the individual's
@@ -337,7 +337,7 @@ of strings. Each string MUST be conformant to the geo URI scheme as defined in [
 [@!RFC5733] defines mechanisms to indicate data is "localized" or "internationalized"
 using "int" and "loc" types. The "int" designates data as being 7-bit ASCII. To express
 contact data with the "int" designation in SimpleContact, it is RECOMMENDED that a language
-tag with the "Latn" script subtag (see [!@RFC5646]) be used.
+tag with the "Latn" script subtag (see [@!RFC5646]) be used.
 
 # No jCard Extension and Identifier
 
