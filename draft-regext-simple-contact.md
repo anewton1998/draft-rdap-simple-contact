@@ -78,7 +78,9 @@ hides or obfuscates the identity of the entity. This serves the same purpose as
 the vCard properties defined in [@!RFC8605]. This JSON member is not intended to
 redact contact information but rather provide a means of specifying contact
 information that is useable (e.g. a working email address) that does not yield
-the identity of the contact.
+the identity of the contact. Marking contact data as "masked" signifies to the
+client that communications using that data may be through an intermediary or
+other indirect means.
 
 Most of the child members are arrays allowing the expression of multiple
 variants of the same information. The order in which items appear in these
@@ -132,6 +134,17 @@ The following is an example:
       }
     ]
 
+RDAP allows the expression of nested entities as the entity object class has its
+own `entities` array. Some servers express the relationship of individuals to roles
+and/or organizations by nesting entities inside other entities. SimpleContact does
+not remove this capability nor prohibit it. However, nesting of entities is NOT
+RECOMMENDED if the expression of a relationship between an individual and a role
+or an organization can be accomplished using names alone due to the complexity
+in representation of those relationships by a client. If a server is to express
+an individual with a relationship to a role and/or organization and each have
+differences other than names (e.g. separate postal addresses), then nesting is
+RECOMMENDED.
+
 ## Postal Addresses
 
 Postal addresses can be expressed as a series of strings, each representing a
@@ -143,11 +156,10 @@ in non-postal systems.
 Postal addresses are expressed with the "postalAddresses" JSON member, which is an
 array of objects each with the following optional members:
 
-* "completeAddress" - holds the unstructured postal address as an array of strings
+* "address" - holds the unstructured postal address as an array of strings
 in which each string represents a line of a postal address.
-* "regionCode" - a string representing the ISO-3166-3 two letter code.
-* "countryCode" - a string containing the ISO-3166-2 two letter code for the country.
-* "postalCode" - a string containing the postal code, sometimes referred to as a zip code or post code.
+* "cc" - a string containing the ISO-3166-2 code.
+* "pc" - a string containing the postal code, sometimes referred to as a zip code or post code.
 * "lang" - see above
 * "masked" - see above
 
@@ -155,14 +167,13 @@ The following is an example of a postal address:
 
     "postalAddresses" : [
       {
-        "completeAddress" : [
+        "address" : [
           "Suite 300",
           "123 Random Tree Name Street",
           "Kalamazoo, MI 90125 US"
         ]
-        "regionCode" : "MI",
-        "countryCode" : "US",
-        "postalCode" : "90215",
+        "cc" : "US-MI",
+        "pc" : "90215",
         "lang" : "en-US"
       }
     ]
@@ -265,49 +276,73 @@ The following is an example of an RDAP entity using SimpleContact:
         "kind" : "individual",
         "individualNames" : [
           {
-            "name" : "Dr. Joe User Jr., Ph.d.",
-            "lang" : "en-US"
+            "name" : "山田太郎",
+            "lang" : "ja"
+          },
+          {
+            "name" : "Yomada Taro",
+            "lang" : "en"
           }
         ],
         "roleNames" : [
           {
+            "name" : "登録サービス ヘルプデスク",
+            "lang" : "ja"
+          },
+          {
             "name" : "Registration Services Help Desk",
-            "lang" : "en-US"
+            "lang" : "en"
           }
         ],
         "organizationNames" : [
           {
-            "name" : "ACME Pty",
-            "lang" : "en-US"
+            "name" : "アクメ",
+            "lang" : "ja"
+          },
+          {
+            "name" : "ACME",
+            "lang" : "en"
           }
         ],
         "postalAddresses" : [
           {
-            "completeAddress" : [
-              "Suite 300",
-              "123 Random Tree Name Street",
-              "Kalamazoo, MI 90125 US"
+            "address" : [
+              "〒150-2345 東京都渋谷区本町2丁目4-7サニーマンション203",
             ]
-            "regionCode" : "MI",
-            "countryCode" : "US",
-            "postalCode" : "90215",
-            "lang" : "en-US"
+            "cc" : "JP-13",
+            "pc" : "150-2345",
+            "lang" : "ja"
+          },
+          {
+            "address" : [
+              "Sunny Mansion #203",
+              "4-7 Hommachi 2-choume",
+              "Shibuya-ku, TOKYO 150-2345"
+            ]
+            "cc" : "JP-13",
+            "pc" : "150-2345",
+            "lang" : "en"
           }
         ],
         "emails" : [
           {
-            "email" : "joe@example.net"
+            "email": "山田太郎@example.net",
+            "lang" : "ja"
+          },
+          {
+            "email" : "yamada.taro@example.net",
+            "lang" : "ja-Latn"
           }
         ],
         "voicePhones" : [
           {
-            "phone" : "+447040202"
+            "phone" : "+81(03) 1234-5678",
+            "masked" : true
           }
         ],
         "faxPhones" : [
           {
-            "phone" : "tel:+1-201-555-9999;ext=123",
-            "masked" : false
+            "phone" : "tel:+810312345679"
           }
         ],
         "webContacts" : [
@@ -416,3 +451,4 @@ Arrangement of digits, letters and symbols on telephones and other devices that 
 </front>
 <seriesInfo name="ITU-T" value="Recommendation E.161"/>
 </reference>
+
