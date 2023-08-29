@@ -68,19 +68,8 @@ defines one JSON member named "sc_data" to be found in RDAP responses.
 "sc_data" is a JSON object, and it has child members described in the following
 sections. Each child member of "sc_data" is optional.
 
-There are two common, optional JSON members of these child members: "lang" and "masked".
-
+There are is one common, optional JSON member of these child members: "lang".
 The JSON member "lang" is the same as that defined by RDAP in [@!RFC9083, Section 4.4].
-
-The JSON member "masked" is a boolean. When true, this indicates that the data of the
-JSON object provided is to facilitate communication with the entity in a manner that
-hides or obfuscates the identity of the entity. This serves the same purpose as
-the vCard properties defined in [@!RFC8605]. This JSON member is not intended to
-redact contact information but rather provide a means of specifying contact
-information that is useable (e.g. a working email address) that does not yield
-the identity of the contact. Marking contact data as "masked" signifies to the
-client that communications using that data may be through an intermediary or
-other indirect means.
 
 Most of the child members are arrays allowing the expression of multiple
 variants of the same information. The order in which items appear in these
@@ -111,7 +100,6 @@ each item is an object with the following members:
 
 * "name" - unstructured textual name as a string
 * "lang" - optional, see above
-* "masked" - optional, see above
 
 The following is an example:
 
@@ -161,7 +149,6 @@ in which each string represents a line of a postal address.
 * "cc" - a string containing the ISO-3166-2 code.
 * "pc" - a string containing the postal code, sometimes referred to as a zip code or post code.
 * "lang" - see above
-* "masked" - see above
 
 The following is an example of a postal address:
 
@@ -186,7 +173,6 @@ object contains the following members:
 
 * "email" - a string containing the email address.
 * "lang" - optional, see above
-* "masked" - optional, see above
 
 If the string in "email" begins with "mailto:", the string
 MUST be conformant to the mailto URI specified in [@!RFC6068]. Otherwise, the string
@@ -206,15 +192,11 @@ This JSON value is optional.
 
 ## Telephones
 
-Telephones to be used for voice communication can be expressed in a JSON array of objects
+Telephones to be used for voice communication can be expressed in a JSON array of strings
 named "voicePhones". Telephones to be used for facsimile machine communications can be
-expressed in a JSON array of objects named "faxPhones". Each object has the following 
-members:
+expressed in a JSON array of strings named "faxPhones".
 
-* "phone" - a string holding the phone number
-* "masked" - optional, see above
-
-If the string in "phone" begins with "tel:", the string MUST be conformant to the tel URI specified in
+If the string in the array begins with "tel:", the string MUST be conformant to the tel URI specified in
 [@!RFC3966]. Otherwise the string is considered unstructured text. If possible, the
 unstructurued text SHOULD be conformant to the [@!ITU.E161.2001] format and the [@!ITU.E164.1991] numbering
 plan.
@@ -222,36 +204,23 @@ plan.
 The following are examples:
 
     "voicePhones" : [
-      {
-        "phone": "tel:+1-201-555-0123",
-        "masked" : false
-      },
-      {
-        "phone" : "+447040202"
-      }
+      "tel:+1-201-555-0123",
+      "+447040202"
     ],
     "faxPhones" : [
-      {
-        "phone" : "tel:+1-201-555-9999;ext=123",
-        "masked" : false
-      }
+      "tel:+1-201-555-9999;ext=123"
     ]
 
 ## Web Contacts
 
 Communications with the entity using a web browser, often by submitting data via a web form,
-can be expressed using a JSON array of objects called "webContacts". Each object has the following
-members:
-
-* "uri" - a string with an HTTPS URI as specified by [@!RFC9110, Section 4.2.2].
-* "masked" - optional, see above.
+can be expressed using a JSON array of strings called "webContacts". Each string in the array
+is an HTTPS URI as specified by [@!RFC9110, Section 4.2.2].
 
 An example:
 
     "webContacts" : [
-      {
-        "uri" : "https://example.com/contact-me"
-      }
+      "https://example.com/contact-me"
     ]
 
 ## Geographic Locations
@@ -281,7 +250,7 @@ The following is an example of an RDAP entity using SimpleContact:
           },
           {
             "name" : "Yomada Taro",
-            "lang" : "en"
+            "lang" : "ja-Latn"
           }
         ],
         "roleNames" : [
@@ -321,7 +290,7 @@ The following is an example of an RDAP entity using SimpleContact:
             ]
             "cc" : "JP-13",
             "pc" : "150-2345",
-            "lang" : "en"
+            "lang" : "ja-Latn"
           }
         ],
         "emails" : [
@@ -335,20 +304,13 @@ The following is an example of an RDAP entity using SimpleContact:
           }
         ],
         "voicePhones" : [
-          {
-            "phone" : "+81(03) 1234-5678",
-            "masked" : true
-          }
+          "+81(03) 1234-5678"
         ],
         "faxPhones" : [
-          {
-            "phone" : "tel:+810312345679"
-          }
+          "tel:+810312345679"
         ],
         "webContacts" : [
-          {
-            "uri" : "https://example.net/contact-me"
-          }
+          "https://example.net/contact-me"
         ]
       },
       "roles":[ "registrar" ],
