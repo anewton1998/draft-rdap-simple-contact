@@ -7,10 +7,10 @@ ipr= "trust200902"
 
 [seriesInfo]
 name = "Internet-Draft"
-value = "draft-newton-regext-rdap-simple-contact-00"
+value = "draft-newton-regext-rdap-simple-contact-01"
 stream = "IETF"
 status = "standard"
-date = 2023-08-25T00:00:00Z
+date = 2023-08-31T00:00:00Z
 
 [[author]]
 initials="A."
