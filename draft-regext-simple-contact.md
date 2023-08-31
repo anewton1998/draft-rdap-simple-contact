@@ -10,7 +10,7 @@ name = "Internet-Draft"
 value = "draft-newton-regext-rdap-simple-contact-00"
 stream = "IETF"
 status = "standard"
-date = 2023-07-05T00:00:00Z
+date = 2023-08-25T00:00:00Z
 
 [[author]]
 initials="A."
@@ -68,14 +68,8 @@ defines one JSON member named "sc_data" to be found in RDAP responses.
 "sc_data" is a JSON object, and it has child members described in the following
 sections. Each child member of "sc_data" is optional.
 
-There are two common, optional JSON members of these child members: "lang" and "masked".
-
+There are is one common, optional JSON member of these child members: "lang".
 The JSON member "lang" is the same as that defined by RDAP in [@!RFC9083, Section 4.4].
-
-The JSON member "masked" is a boolean. When true, this indicates that the data of the
-JSON object provided is to facilitate communication with the entity in a manner that
-hides or obfuscates the identity of the entity. This serves the same purpose as
-the vCard properties defined in [@!RFC8605].
 
 Most of the child members are arrays allowing the expression of multiple
 variants of the same information. The order in which items appear in these
@@ -88,16 +82,10 @@ The "kind" JSON value is a string, that is either "individual", "role" or
 
     "kind" : "role"
 
+There is no equivalent to the "role" value in either jCard or JSContact,
+though role entities are common in RDAP registries.
 
 ## Names
-
-Names may be expressed as unstructured text and as structured data.
-When names are given as structured data, it is RECOMMENDED to also
-give unstructured names. This may require servers which store names
-in structured data to synthesize the unstructured names. 
-Servers which store only unstructured names SHOULD NOT attempt to synthesize 
-and provide structured names from those values, because of the difficulty 
-of doing this correctly for all types of names.
 
 Names can be expressed for each kind of the entity, as described in the
 "kind" string. When describing an "individual", the name of the individual's
@@ -105,142 +93,74 @@ role and organization may also be expressed. When describing a "role", the
 name of the role's organization may also be expressed. It is NOT RECOMMENDED
 to express the name of a role or individual when the kind is "organization".
 
-Each type of name is expressed as a JSON array in which each item is an
-object with the following optional members:
+Names are expressed using the "individualNames",
+"roleNames", and "organizationNames" JSON members for individuals, roles,
+and organizations respectively. The value of each is an array in which
+each item is an object with the following members:
 
-* "name" - the unstructured name as a string
-* "lang" - see above
-* "masked" - see above
-* "parts" - a JSON object that varies for each type of name.
-
-A> The co-authors of this specification are skeptical of the need for
-A> structured names in RDAP. None of the references in Section 1 indicate
-A> that names are collected or published structurally. Additionally,
-A> attempts to structure names for all contexts and languages is unlikely
-A> to yield a complete solution 
-A> (see https://mailarchive.ietf.org/arch/msg/calsify/3MR_gLO-1NuyQvE8DIl88KNglSs/).
-
-### Individual Names
-
-The name of an individual may be expressed with the JSON member named
-"individualNames". The "parts" object for "individualNames" has the
-following optional members:
-
-* "prefixes" - an array of strings holding honorifics, titles, and other signifiers that are
-typically prefixed to a name.
-* "firstNames" - an array of strings holding the set of names that preceed other names. These are often called "given" names.
-* "middleNames" - an array of strings holding the set of names that succeed first names and preceed last names. These
-are often referred to as "additional" names.
-* "lastNames" - an array of strings holding the set of names that succeed other names. These are often called "sur" names.
-* "suffixes" - an array of strings holding honorifics, titles, and other signifiers that are typically suffixed to a name.
+* "name" - unstructured textual name as a string
+* "lang" - optional, see above
 
 The following is an example:
 
     "individualNames" : [
       {
         "name" : "Dr. Bob Lee Aloysius Smurd, Ph.d.",
-        "lang" : "en-AU",
-        "parts" : {
-          "prefixes": [ "Dr."],
-          "firstNames": [ "Bob" ],
-          "middleNames" : [ "Lee", "Aloysius" ],
-          "lastNames" : [ "Smurd" ],
-          "suffixes" : [ "Ph.d." ]
-        }
+        "lang" : "en-AU"
       }
-    ]
-
-### Role Names
-
-The name of a role may be expressed with the JSON member named
-"roleNames". The "parts" object for "roleNames" has one 
-member named "roles" which is an array of strings.
-
-The following is an example:
-
+    ],
     "roleNames" : [
       {
         "name" : "Abuse Prevention, Trust and Safety",
-        "lang" : "en-AU",
-        "parts" : {
-          "roles" : [ "Abuse Prevention", "Trust and Safety"],
-        }
+        "lang" : "en-AU"
       }
-    ]
-
-### Organization Names
-
-The name of an organization may be expressed with the JSON member named
-"organizationNames". The "parts" object for "organizationNames" has the
-following optional members:
-
-* "name" - a string holding the name of the organization without other qualifiers.
-* "subDivisions" - an array of strings, each the name of a subdivision of the organization.
-* "suffixes" - an array of strings, each signifying a legal status of the organization.
-* "legalId" - an array of strings, each containing a legal identifier of the organization.
-
-The following is an example:
-
+    ],
     "organizationNames" : [
       {
-        "name" : "ACME Pty, Floors and Windows, Direct Sales",
-        "lang" : "en-AU",
-        "parts" : {
-          "name" : "ACME",
-          "subDivisions": [ "Floors and Windows", "Direct Sales" ],
-          "suffixes" : [ "Pty" ],
-        }
+        "name" : "ACME Pty",
+        "lang" : "en-AU"
       }
     ]
+
+RDAP allows the expression of nested entities as the entity object class has its
+own `entities` array. Some servers express the relationship of individuals to roles
+and/or organizations by nesting entities inside other entities. SimpleContact does
+not remove this capability nor prohibit it. However, nesting of entities is NOT
+RECOMMENDED if the expression of a relationship between an individual and a role
+or an organization can be accomplished using names alone due to the complexity
+in representation of those relationships by a client. If a server is to express
+an individual with a relationship to a role and/or organization and each have
+differences other than names (e.g. separate postal addresses), then nesting is
+RECOMMENDED.
 
 ## Postal Addresses
 
-Like names, postal addresses can be expressed as either structured or unstructured.
-When postal addresses are given as structured data, it is RECOMMENDED to also
-give unstructured addresses. This may require servers which store addresses
-in structured data to synthesize the unstructured addresses. 
-Servers which store only unstructured addresses SHOULD NOT attempt to synthesize 
-and provide structured addresses from those values, because of the difficulty of 
-doing this correctly for all types of addresses.
+Postal addresses can be expressed as a series of strings, each representing a
+separate line of text as it would appear on an item for delievery in a postal
+system. Additionally, postal addresses may be augmented with some of the common
+fields found in postal systems for the purposes of processing these addresses
+in non-postal systems.
 
 Postal addresses are expressed with the "postalAddresses" JSON member, which is an
 array of objects each with the following optional members:
 
-* "completeAddress" - holds the unstructured postal address as an array of strings
+* "address" - holds the unstructured postal address as an array of strings
 in which each string represents a line of a postal address.
-* "deliveryLines" - an array of strings in which each string represents a line of a
-postal address specific to delivery within the locality of the address. This information
-typically contains street names and numbers, apartment or suite names, and other information
-necessary for the delivery of postal mail within a locality.
-* "locality" - a string representing the village, city, municipality, or similar
-part of a postal address.
-* "regionName" - a string of the region name of a country, such as a state, province, or department.
-* "regionCode" - a string representing the ISO-3166-3 two letter code.
-* "countryName" - a string containing the country name.
-* "countryCode" - a string containing the ISO-3166-2 two letter code for the country.
-* "postalCode" - a string containing the postal code, sometimes referred to as a zip code or post code.
+* "cc" - a string containing the ISO-3166-2 code.
+* "pc" - a string containing the postal code, sometimes referred to as a zip code or post code.
 * "lang" - see above
-* "masked" - see above
 
 The following is an example of a postal address:
 
     "postalAddresses" : [
       {
-        "completeAddress" : [
+        "address" : [
           "Suite 300",
           "123 Random Tree Name Street",
           "Kalamazoo, MI 90125 US"
         ]
-        "deliveryLines" : [ 
-          "Suite 300",
-          "123 Random Tree Name Street",
-        ],
-        "locality" : "Kalamazoo",
-        "regionName" : "Michigan",
-        "regionCode" : "MI",
-        "countryName" : "United States of America",
-        "countryCode" : "US",
-        "postalCode" : "90215",
+        "cc" : "US-MI",
+        "pc" : "90215",
         "lang" : "en-US"
       }
     ]
@@ -253,35 +173,30 @@ object contains the following members:
 
 * "email" - a string containing the email address.
 * "lang" - optional, see above
-* "masked" - optional, see above
 
 If the string in "email" begins with "mailto:", the string
 MUST be conformant to the mailto URI specified in [@!RFC6068]. Otherwise, the string
-MUST be conformant to the address specification of [@!RFC5322, Section 3.4].
+MUST be conformant to the address specification of [@!RFC6531, Section 3.3].
 This JSON value is optional.
 
     "emails" : [
       {
-        "email": "山田太郎 <yamada.taro@example.net>",
-        "lang" : ja
+        "email": "山田太郎@example.net",
+        "lang" : "ja"
       },
       {
-        "email" : "Yamada Taro <yamada.taro@example.net>"
+        "email" : "yamada.taro@example.net",
         "lang" : "ja-Latn"
       }
     ]
 
 ## Telephones
 
-Telephones to be used for voice communication can be expressed in a JSON array of objects
+Telephones to be used for voice communication can be expressed in a JSON array of strings
 named "voicePhones". Telephones to be used for facsimile machine communications can be
-expressed in a JSON array of objects named "faxPhones". Each object has the following 
-members:
+expressed in a JSON array of strings named "faxPhones".
 
-* "phone" - a string holding the phone number
-* "masked" - optional, see above
-
-If the string in "phone" begins with "tel:", the string MUST be conformant to the tel URI specified in
+If the string in the array begins with "tel:", the string MUST be conformant to the tel URI specified in
 [@!RFC3966]. Otherwise the string is considered unstructured text. If possible, the
 unstructurued text SHOULD be conformant to the [@!ITU.E161.2001] format and the [@!ITU.E164.1991] numbering
 plan.
@@ -289,36 +204,23 @@ plan.
 The following are examples:
 
     "voicePhones" : [
-      {
-        "phone": "tel:+1-201-555-0123",
-        "masked" : false
-      },
-      {
-        "phone" : "+447040202",
-      }
+      "tel:+1-201-555-0123",
+      "+447040202"
     ],
     "faxPhones" : [
-      {
-        "phone" : "tel:+1-201-555-9999;ext=123",
-        "masked" : false
-      }
+      "tel:+1-201-555-9999;ext=123"
     ]
 
 ## Web Contacts
 
 Communications with the entity using a web browser, often by submitting data via a web form,
-can be expressed using a JSON array of objects called "webContacts". Each object has the following
-members:
-
-* "uri" - a string with an HTTPS URI as specified by [@!RFC9110, Section 4.2.2].
-* "masked" - optional, see above.
+can be expressed using a JSON array of strings called "webContacts". Each string in the array
+is an HTTPS URI as specified by [@!RFC9110, Section 4.2.2].
 
 An example:
 
     "webContacts" : [
-      {
-        "uri" : "https://example.com/contact-me"
-      }
+      "https://example.com/contact-me"
     ]
 
 ## Geographic Locations
@@ -332,6 +234,128 @@ of strings. Each string MUST be conformant to the geo URI scheme as defined in [
 
 "geo" values SHOULD NOT be used with contact data when "kind" is "individual".
 
+## An Entity Example {#example}
+
+The following is an example of an RDAP entity using SimpleContact:
+
+    {
+      "objectClassName" : "entity",
+      "handle":"XXXX",
+      "sc_data": {
+        "kind" : "individual",
+        "individualNames" : [
+          {
+            "name" : "山田太郎",
+            "lang" : "ja"
+          },
+          {
+            "name" : "Yomada Taro",
+            "lang" : "ja-Latn"
+          }
+        ],
+        "roleNames" : [
+          {
+            "name" : "登録サービス ヘルプデスク",
+            "lang" : "ja"
+          },
+          {
+            "name" : "Registration Services Help Desk",
+            "lang" : "en"
+          }
+        ],
+        "organizationNames" : [
+          {
+            "name" : "アクメ",
+            "lang" : "ja"
+          },
+          {
+            "name" : "ACME",
+            "lang" : "en"
+          }
+        ],
+        "postalAddresses" : [
+          {
+            "address" : [
+              "〒150-2345 東京都渋谷区本町2丁目4-7サニーマンション203",
+            ]
+            "cc" : "JP-13",
+            "pc" : "150-2345",
+            "lang" : "ja"
+          },
+          {
+            "address" : [
+              "Sunny Mansion #203",
+              "4-7 Hommachi 2-choume",
+              "Shibuya-ku, TOKYO 150-2345"
+            ]
+            "cc" : "JP-13",
+            "pc" : "150-2345",
+            "lang" : "ja-Latn"
+          }
+        ],
+        "emails" : [
+          {
+            "email": "山田太郎@example.net",
+            "lang" : "ja"
+          },
+          {
+            "email" : "yamada.taro@example.net",
+            "lang" : "ja-Latn"
+          }
+        ],
+        "voicePhones" : [
+          "+81(03) 1234-5678"
+        ],
+        "faxPhones" : [
+          "tel:+810312345679"
+        ],
+        "webContacts" : [
+          "https://example.net/contact-me"
+        ]
+      },
+      "roles":[ "registrar" ],
+      "publicIds":[
+        {
+          "type":"IANA Registrar ID",
+          "identifier":"1"
+        }
+      ],
+      "remarks":[
+        {
+          "description":[
+            "She sells sea shells down by the sea shore.",
+            "Originally written by Terry Sullivan."
+          ]
+        }
+      ],
+      "links":[
+        {
+          "value":"https://example.com/entity/XXXX",
+          "rel":"self",
+          "href":"https://example.com/entity/XXXX",
+          "type" : "application/rdap+json"
+        },
+        {
+          "value":"https://example.com/entity/XXXX",
+          "rel":"about",
+          "href":"https://example.com/entity/XXXX.vcard",
+          "type" : "text/vcard"
+        }
+      ],
+      "events":[
+        {
+          "eventAction":"registration",
+          "eventDate":"1990-12-31T23:59:59Z"
+        }
+      ],
+      "asEventActor":[
+        {
+          "eventAction":"last changed",
+          "eventDate":"1991-12-31T23:59:59Z"
+        }
+      ]
+    }
+
 # EPP Int/Loc Data
 
 [@!RFC5733] defines mechanisms to indicate data is "localized" or "internationalized"
@@ -339,7 +363,18 @@ using "int" and "loc" types. The "int" designates data as being 7-bit ASCII. To 
 contact data with the "int" designation in SimpleContact, it is RECOMMENDED that a language
 tag with the "Latn" script subtag (see [@!RFC5646]) be used.
 
-# No jCard Extension and Identifier
+# Links to Other Contact Formats
+
+SimpleContact does not attempt to model all possible forms of contact formats or data.
+Where an RDAP server can provide a more extensive form such as vCard, jCard, or JSContact,
+these can be expressed in an RDAP link using the "about" rel type and the media type
+appropriate to that form. section (#example) contains an example using vCard.
+
+RDAP servers MUST place the same access restrictions upon these resources as they do
+on the RDAP entity from which they are referenced. It is NOT RECOMMENDED to link to
+contact data provided by other servers or servers under separate authorities.
+
+# The No jCard Extension and Identifier
 
 This document also defines a second RDAP extension to signal the non-use of jCard in RDAP
 responses. The identifier for this extension is "noJCard". When used with the RDAP-X
@@ -378,3 +413,4 @@ Arrangement of digits, letters and symbols on telephones and other devices that 
 </front>
 <seriesInfo name="ITU-T" value="Recommendation E.161"/>
 </reference>
+
